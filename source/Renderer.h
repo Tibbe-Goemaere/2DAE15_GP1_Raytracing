@@ -24,6 +24,18 @@ namespace dae
 		bool SaveBufferToImage() const;
 
 	private:
+
+		enum class LightingMode
+		{
+			ObservedArea,
+			Radiance,
+			BRDF,
+			Combined
+		};
+
+		LightingMode m_CurrentLightingMode{ LightingMode::Combined };
+		bool m_ShadowsEnabled{ true };
+
 		SDL_Window* m_pWindow{};
 
 		SDL_Surface* m_pBuffer{};
@@ -31,5 +43,7 @@ namespace dae
 
 		int m_Width{};
 		int m_Height{};
+
+		void SwitchModes();
 	};
 }

@@ -3,6 +3,7 @@
 #include <fstream>
 #include "Math.h"
 #include "DataTypes.h"
+#include "Vector3.h"
 
 namespace dae
 {
@@ -12,9 +13,64 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W1
-			assert(false && "No Implemented Yet!");
-			return false;
+			const Vector3 rayMinusSphereOrigin{ ray.origin - sphere.origin };
+
+			const float a{ Vector3::Dot(ray.direction,ray.direction) };
+			const float b{ 2 *Vector3::Dot(rayMinusSphereOrigin,ray.direction ) };
+			const float c{ Vector3::Dot(rayMinusSphereOrigin,rayMinusSphereOrigin) - (sphere.radius * sphere.radius) };
+
+			const float discriminant{b*b - 4*a*c};
+
+			if (discriminant < 0)
+			{
+				return false;
+			}
+			else if (discriminant == 0)
+			{
+				float t{ -b / (2.f * a) };
+				if (ray.min < t && t < ray.max)
+				{
+					if (t < hitRecord.t)
+					{
+						hitRecord.t = t;
+						hitRecord.materialIndex = sphere.materialIndex;
+						hitRecord.didHit = true;
+					};
+				}
+			}
+			else
+			{
+				const float firstT{ ( - b + sqrtf(discriminant)) / (2.f * a)};
+				const float secondT{ ( - b - sqrtf(discriminant)) / (2.f * a)};
+				float t{};
+				if (firstT < 0)
+				{
+					t = secondT;
+				}
+				else if (secondT < 0)
+				{
+					t = firstT;
+				}
+				else if (firstT < secondT)
+				{
+					t = firstT;
+				}
+				else
+				{
+					t = secondT;
+				}
+				
+				if (ray.min < t && t < ray.max)
+				{
+					if (t < hitRecord.t)
+					{
+						hitRecord.t = t;
+						hitRecord.materialIndex = sphere.materialIndex;
+						hitRecord.didHit = true;
+					}
+				}
+			}
+			return hitRecord.didHit;
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
@@ -27,9 +83,22 @@ namespace dae
 		//PLANE HIT-TESTS
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W1
-			assert(false && "No Implemented Yet!");
-			return false;
+			
+			const float tValue{ Vector3::Dot((plane.origin - ray.origin), plane.normal) / Vector3::Dot(ray.direction, plane.normal) };
+			
+			if (ray.min < tValue && tValue < ray.max)
+			{
+				if (tValue < hitRecord.t)
+				{
+					hitRecord.t = tValue;
+					hitRecord.materialIndex = plane.materialIndex;
+					hitRecord.didHit = true;
+					
+					return true;
+				}
+				return false;
+			}
+			
 		}
 
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray)
@@ -74,9 +143,15 @@ namespace dae
 		//Direction from target to light
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
-			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+			/*if (light.type == LightType::Point)
+			{
+				return light.origin - origin;
+			}
+			else
+			{
+				return origin + light.direction * FLT_MAX;
+			}*/
+			return light.origin - origin;
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
